@@ -14,7 +14,8 @@ def lambda_handler(event, context):
     
     for record in event['Records']:
         print(record['body'])
-        tweet = record['body']
+        raw_record = record['body']
+        tweet = (raw_record[:278] + '..') if len(raw_record) > 279 else raw_record
         logger.info("[INFO] Publishing the queued tweet: " + tweet)
         api.update_status(tweet)
 
