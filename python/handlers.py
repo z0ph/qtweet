@@ -5,8 +5,12 @@ import logging
 from config import create_api
 import json
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
+root = logging.getLogger()
+if root.handlers:
+    for handler in root.handlers:
+        root.removeHandler(handler)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',level=logging.INFO)
+
 
 def lambda_handler(event, context):
     
@@ -15,8 +19,10 @@ def lambda_handler(event, context):
     for record in event['Records']:
         print(record['body'])
         raw_record = record['body']
-        tweet = (raw_record[:278] + '..') if len(raw_record) > 279 else raw_record
-        logger.info("[INFO] Publishing the queued tweet: " + tweet)
+        print("raw_length: ", len(raw_record))
+        tweet = (raw_record[:275] + '..') if len(raw_record) > 279 else raw_record
+        print("tweet_length: ", len(tweet))
+        logging.info("[INFO] Publishing the queued tweet: " + tweet)
         api.update_status(tweet)
 
     
