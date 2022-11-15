@@ -24,8 +24,6 @@ help:
 	@echo "	tf-apply - deploy the IaC using Terraform"
 	@echo "	tf-destroy - delete all previously created infrastructure using Terraform"
 	@echo "	clean - clean the build folder"
-	@echo "	clean-layer - clean the layer folder"
-	@echo "	cleaning - clean build and layer folders"
 
 
 ################ Artifacts #####################
@@ -87,54 +85,7 @@ tf-destroy:
 
 ################################################
 
-################ CloudFormation ################
-cfn-package: clean
-	@echo "Consolidating python code in ./build"
-	mkdir -p build
-	cp -R ./python/*.py ./build/
-	@echo "zipping python code, uploading to S3 bucket, and transforming template"
-	@aws cloudformation package \
-			--template-file sam.yml \
-			--s3-bucket ${S3_BUCKET} \
-			--output-template-file build/template-lambda.yml
-
-	@echo "Copying updated cloud template to S3 bucket"
-	aws s3 cp build/template-lambda.yml 's3://${S3_BUCKET}/template/template-lambda.yml'
-
-cfn-deploy:
-	@aws cloudformation deploy \
-			--template-file build/template-lambda.yml \
-			--region ${AWS_REGION} \
-			--stack-name "${PROJECT}-${ENV}" \
-			--parameter-overrides \
-				env=${ENV} \
-				project=${PROJECT} \
-				description=${DESCRIPTION} \
-			--capabilities CAPABILITY_IAM \
-			--no-fail-on-empty-changeset
-
-layer: clean-layer
-	pip3 install \
-			--isolated \
-			--disable-pip-version-check \
-			-Ur requirements.txt -t ./layer/
-################################################
-
 ################ Cleaning ######################
-clean-layer:
-	@rm -fr layer/
-	@rm -fr dist/
-	@rm -fr htmlcov/
-	@rm -fr site/
-	@rm -fr .eggs/
-	@rm -fr .tox/
-	@find . -name '*.egg-info' -exec rm -fr {} +
-	@find . -name '.DS_Store' -exec rm -fr {} +
-	@find . -name '*.egg' -exec rm -f {} +
-	@find . -name '*.pyc' -exec rm -f {} +
-	@find . -name '*.pyo' -exec rm -f {} +
-	@find . -name '*~' -exec rm -f {} +
-	@find . -name '__pycache__' -exec rm -fr {} +
 
 clean-venv: clean
 	rm -rf ./python/venv
@@ -157,8 +108,6 @@ clean:
 	@find . -name '*.pyo' -exec rm -f {} +
 	@find . -name '*~' -exec rm -f {} +
 	@find . -name '__pycache__' -exec rm -fr {} +
-
-cleaning: clean clean-layer
 ################################################
 
 all: artifacts tf-package tf-init tf-validate tf-plan tf-apply

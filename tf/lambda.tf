@@ -8,7 +8,6 @@ resource "aws_lambda_function" "lambda_function" {
     timeout             = 30
     memory_size         = 256
     runtime             = "python3.7"
-    layers              = ["${var.layer_arn}"]
     
     tags = {
         Project     = "${var.project}"
