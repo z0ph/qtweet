@@ -1,6 +1,11 @@
+resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "${var.project}-${var.env}-lambda-role"
-    assume_role_policy = <<EOF
+  name               = "${var.project}-${var.env}-lambda-role"
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [{
@@ -15,10 +20,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "lambda_policy" {
-	name = "${var.project}-${var.env}-policy"
-	role = "${aws_iam_role.iam_for_lambda.id}"
+  name = "${var.project}-${var.env}-policy"
+  role = aws_iam_role.iam_for_lambda.id
 
-	policy = <<-EOF
+  policy = <<-EOF
 	{
 	"Version": "2012-10-17",
 	"Statement": [
@@ -37,18 +42,11 @@ resource "aws_iam_role_policy" "lambda_policy" {
 				"secretsmanager:GetSecretValue"
 			],
 			"Resource": [
-				"${aws_secretsmanager_secret.ACCESS_TOKEN.arn}",
-				"${aws_secretsmanager_secret.ACCESS_TOKEN_SECRET.arn}",
-				"${aws_secretsmanager_secret.CONSUMER_KEY.arn}",
-				"${aws_secretsmanager_secret.CONSUMER_SECRET.arn}"
+				"${aws_secretsmanager_secret.secret.arn}"
 			]
 		}
 	]
 	}
 	EOF
-	}
-
-resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
-	role       = "${aws_iam_role.iam_for_lambda.name}"
-	policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+

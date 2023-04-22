@@ -14,16 +14,21 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',level=log
 
 def lambda_handler(event, context):
     
-    api = create_api()
+    twitter_client = create_api()
     
     for record in event['Records']:
-        logging.info("record: " + record['body'])
+        logging.info("Record Body: " + record['body'])
         raw_record = record['body']
-        logging.info("raw_length: " + len(raw_record))
+        logging.info("raw_length: " + str(len(raw_record)))
         tweet = (raw_record[:275] + '..') if len(raw_record) > 279 else raw_record
-        logging.info("tweet_length: " + len(tweet))
-        logging.info("Publishing the queued tweet: " + tweet)
-        api.update_status(tweet)
+        logging.info("tweet_length: " + str(len(tweet)))
+        
+        try:
+            logging.info("Tweeting: %s", tweet)
+            twitter_client.create_tweet(text=tweet)
+        except tweepy.errors.TweepyException as e:
+            logging.error("Tweepy error: %s", e)
+            raise
 
     
     body = {

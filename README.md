@@ -19,7 +19,6 @@ As usual, I'm sharing this with you folks as I was not able to find equivalent i
 - AWS Account
 - Twitter [API Keys](https://developer.twitter.com/en/docs/basics/apps/guides/the-app-management-dashboard)
 - Terraform
-- AWS Lambda layer with boto3 ([How-to](https://towardsdatascience.com/introduction-to-amazon-lambda-layers-and-boto3-using-python3-39bd390add17))
 
 ### How to deploy on my AWS Account
 
@@ -28,11 +27,11 @@ As usual, I'm sharing this with you folks as I was not able to find equivalent i
 #### Manual - Under the hood (for Plumbers)
 
 1. `make artifacts` (create S3 bucket)
-2. `make tf-package` (create the artifact and push to S3)
+2. `make package` (create the zip artifact)
 3. `make tf-init` (to prepare terraform deployment)
-4. `make tf-validate` (**optional**) validate the IaC
+4. `make tf-validate` (**optional**) validate the IaC + FMT
 5. `make tf-plan` (**optional**) Dry-Run
-6. `make tf-apply` Deploy the infrastructure
+6. `make tf-apply` Deploy the infrastructure as code
 
 *nb: Terraform is using remote state on S3.*
 

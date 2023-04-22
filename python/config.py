@@ -6,16 +6,15 @@ import base64
 import json
 from botocore.exceptions import ClientError
 
-logger = logging.getLogger()
+# Logging configuration
+root = logging.getLogger()
+if root.handlers:
+    for handler in root.handlers:
+        root.removeHandler(handler)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',level=logging.INFO)
 
-ENVIRONMENT = os.environ['Environment']
-CONSUMER_K = "CONSUMER_KEY-" + ENVIRONMENT
-CONSUMER_SEC = "CONSUMER_SECRET-" + ENVIRONMENT
-ACCESS_TOK = "ACCESS_TOKEN-" + ENVIRONMENT
-ACCESS_TOKEN_SEC = "ACCESS_TOKEN_SECRET-" + ENVIRONMENT
-
-region_name = "eu-west-1"
-
+secret_name = os.environ["SecretName"]
+region_name = os.environ["AWSRegion"]
 
 def create_api():
     session = boto3.session.Session()
@@ -26,27 +25,11 @@ def create_api():
 
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId=CONSUMER_K
+            SecretId=secret_name
         )
     except ClientError as e:
-        if e.response['Error']['Code'] == 'DecryptionFailureException':
-            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-            raise e
-        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-            # An error occurred on the server side.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            # You provided an invalid value for a parameter.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            # You provided a parameter value that is not valid for the current state of the resource.
-            raise e
-        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-            # We can't find the resource that you asked for.
             raise e
     else:
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these fields will be populated.
         if 'SecretString' in get_secret_value_response:
             consumer_key_string = get_secret_value_response['SecretString']
             d = json.loads(consumer_key_string)
@@ -58,27 +41,11 @@ def create_api():
 
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId=CONSUMER_SEC
+            SecretId=secret_name
         )
     except ClientError as e:
-        if e.response['Error']['Code'] == 'DecryptionFailureException':
-            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-            raise e
-        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-            # An error occurred on the server side.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            # You provided an invalid value for a parameter.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            # You provided a parameter value that is not valid for the current state of the resource.
-            raise e
-        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-            # We can't find the resource that you asked for.
             raise e
     else:
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these fields will be populated.
         if 'SecretString' in get_secret_value_response:
             consumer_secret_string = get_secret_value_response['SecretString']
             d = json.loads(consumer_secret_string)
@@ -89,27 +56,11 @@ def create_api():
             consumer_secret = d['CONSUMER_SECRET']
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId=ACCESS_TOK
+            SecretId=secret_name
         )
     except ClientError as e:
-        if e.response['Error']['Code'] == 'DecryptionFailureException':
-            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-            raise e
-        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-            # An error occurred on the server side.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            # You provided an invalid value for a parameter.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            # You provided a parameter value that is not valid for the current state of the resource.
-            raise e
-        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-            # We can't find the resource that you asked for.
             raise e
     else:
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these fields will be populated.
         if 'SecretString' in get_secret_value_response:
             access_token_string = get_secret_value_response['SecretString']
             d = json.loads(access_token_string)
@@ -121,27 +72,11 @@ def create_api():
 
     try:
         get_secret_value_response = client.get_secret_value(
-            SecretId=ACCESS_TOKEN_SEC
+            SecretId=secret_name
         )
     except ClientError as e:
-        if e.response['Error']['Code'] == 'DecryptionFailureException':
-            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
-            raise e
-        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
-            # An error occurred on the server side.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            # You provided an invalid value for a parameter.
-            raise e
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            # You provided a parameter value that is not valid for the current state of the resource.
-            raise e
-        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
-            # We can't find the resource that you asked for.
             raise e
     else:
-        # Decrypts secret using the associated KMS CMK.
-        # Depending on whether the secret is a string or binary, one of these fields will be populated.
         if 'SecretString' in get_secret_value_response:
             access_token_secret_string = get_secret_value_response['SecretString']
             d = json.loads(access_token_secret_string)
@@ -151,16 +86,10 @@ def create_api():
             d = json.loads(access_token_secret_string)
             access_token_secret = d['ACCESS_TOKEN_SECRET']
 
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
-
-    api = tweepy.API(auth, wait_on_rate_limit=True,
-                     wait_on_rate_limit_notify=True)
-
-    try:
-        api.verify_credentials()
-    except Exception as e:
-        logger.error("Error creating API", exc_info=True)
-        raise e
-    logger.info("API created")
-    return api
+    twitter_client = tweepy.Client(consumer_key=consumer_key,
+                       consumer_secret=consumer_secret,
+                       access_token=access_token,
+                       access_token_secret=access_token_secret)
+    
+    
+    return twitter_client

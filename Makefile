@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help tf-init tf-validate tf-plan tf-package tf-apply layer clean clean-layer cleaning artifacts
+.PHONY: help tf-init tf-validate tf-plan package tf-apply clean artifacts
 
 ################ Project #######################
 PROJECT ?= qtweet
@@ -9,7 +9,7 @@ DESCRIPTION ?= Dead simple SQS to Twitter bot
 ################ Config ########################
 S3_BUCKET ?= ${PROJECT}-artifacts
 AWS_REGION ?= eu-west-1
-ENV ?= development
+ENV ?= mamip
 ################################################
 
 help:
@@ -19,7 +19,7 @@ help:
 	@echo "	artifacts - create required S3 bucket for artifacts storage"
 	@echo "	tf-init - init Terraform IaC"
 	@echo "	tf-validate - validate IaC using Terraform"
-	@echo "	tf-package - prepare the package for Terraform"
+	@echo "	package - prepare the package for Terraform"
 	@echo "	tf-plan - plan (dryrun) IaC using Terraform"
 	@echo "	tf-apply - deploy the IaC using Terraform"
 	@echo "	tf-destroy - delete all previously created infrastructure using Terraform"
@@ -45,7 +45,7 @@ venv: clean-venv
 ################################################
 
 ################ Terraform #####################
-tf-package: clean
+package: clean
 	@echo "Consolidating python code in ./build"
 	mkdir -p build
 	make venv
@@ -55,33 +55,32 @@ tf-package: clean
 	cd build ; zip -r ../tf/function.zip *
 
 tf-init:
-	@terraform init \
+	@terraform -chdir=tf/ init \
 		-backend-config="bucket=$(S3_BUCKET)" \
-		-backend-config="key=$(PROJECT)/$(ENV)-terraform.tfstate" \
-		./tf/
+		-backend-config="key=$(PROJECT)/$(ENV)-terraform.tfstate"
 
 tf-validate:
-	@terraform validate ./tf/
+	@terraform -chdir=tf/ fmt
+	@terraform -chdir=tf/ validate
 
-tf-plan:
-	@terraform plan \
+tf-plan: tf-validate
+	@terraform -chdir=tf/ plan \
 		-var="env=$(ENV)" \
 		-var="project=$(PROJECT)" \
 		-var="description=$(DESCRIPTION)" \
 		-var="aws_region=$(AWS_REGION)" \
-		-var="artifacts_bucket=$(S3_BUCKET)" \
-		./tf/
+		-var="artifacts_bucket=$(S3_BUCKET)"
 
-tf-apply:
-	@terraform apply \
+tf-apply: package
+	@terraform -chdir=tf/ apply \
 		-var="env=$(ENV)" \
 		-var="project=$(PROJECT)" \
 		-var="description=$(DESCRIPTION)" \
-		-compact-warnings ./tf/
+		-compact-warnings
 
 tf-destroy:
 	@read -p "Are you sure that you want to destroy: '$(PROJECT)-$(ENV)-$(AWS_REGION)'? [yes/N]: " sure && [ $${sure:-N} = 'yes' ]
-	@terraform destroy ./tf/
+	@terraform -chdir=tf/ destroy
 
 ################################################
 
@@ -110,4 +109,4 @@ clean:
 	@find . -name '__pycache__' -exec rm -fr {} +
 ################################################
 
-all: artifacts tf-package tf-init tf-validate tf-plan tf-apply
+all: artifacts package tf-init tf-validate tf-plan tf-apply
