@@ -33,7 +33,7 @@ As usual, I'm sharing this with you folks as I was not able to find equivalent i
 5. `make tf-plan` (**optional**) Dry-Run
 6. `make tf-apply` Deploy the infrastructure as code
 
-*nb: Terraform is using remote state on S3.*
+_nb: Terraform is using remote state on S3._
 
 #### Setup Twitter secrets
 
