@@ -3,6 +3,11 @@ variable "aws_region" {
   description = "AWS Region"
 }
 
+variable "product" {
+  default     = "no-product-name"
+  description = "Product Name"
+}
+
 variable "project" {
   default     = "no-project-name"
   description = "Project Name"

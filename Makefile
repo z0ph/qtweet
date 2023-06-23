@@ -3,6 +3,7 @@
 
 ################ Project #######################
 PROJECT ?= qtweet
+PRODUCT ?= mamip
 DESCRIPTION ?= Dead simple SQS to Twitter bot
 ################################################
 
@@ -18,6 +19,7 @@ help:
 	@echo ""
 	@echo "	artifacts - create required S3 bucket for artifacts storage"
 	@echo "	tf-init - init Terraform IaC"
+	@echo "	tf-fmt - format IaC using Terraform"
 	@echo "	tf-validate - validate IaC using Terraform"
 	@echo "	package - prepare the package for Terraform"
 	@echo "	tf-plan - plan (dryrun) IaC using Terraform"
@@ -59,7 +61,10 @@ tf-init:
 		-backend-config="bucket=$(S3_BUCKET)" \
 		-backend-config="key=$(PROJECT)/$(ENV)-terraform.tfstate"
 
-tf-validate:
+tf-fmt:
+	@terraform -chdir=tf/ fmt
+
+tf-validate: tf-fmt
 	@terraform -chdir=tf/ fmt
 	@terraform -chdir=tf/ validate
 
@@ -67,6 +72,7 @@ tf-plan: tf-validate
 	@terraform -chdir=tf/ plan \
 		-var="env=$(ENV)" \
 		-var="project=$(PROJECT)" \
+		-var="product=$(PRODUCT)" \
 		-var="description=$(DESCRIPTION)" \
 		-var="aws_region=$(AWS_REGION)" \
 		-var="artifacts_bucket=$(S3_BUCKET)"
@@ -75,6 +81,7 @@ tf-apply: package
 	@terraform -chdir=tf/ apply \
 		-var="env=$(ENV)" \
 		-var="project=$(PROJECT)" \
+		-var="product=$(PRODUCT)" \
 		-var="description=$(DESCRIPTION)" \
 		-compact-warnings
 

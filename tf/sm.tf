@@ -3,6 +3,7 @@ resource "aws_secretsmanager_secret" "secret" {
 
   tags = {
     Project     = "${var.project}"
+    Product     = "${var.product}"
     Environment = "${var.env}"
   }
 }

@@ -11,11 +11,13 @@ resource "aws_lambda_function" "lambda_function" {
 
   tags = {
     Project     = "${var.project}"
+    Product     = "${var.product}"
     Environment = "${var.env}"
     AWSRegion   = "${var.aws_region}"
   }
 
   environment {
+
     variables = {
       Environment = "${var.env}"
       SecretName  = aws_secretsmanager_secret.secret.name

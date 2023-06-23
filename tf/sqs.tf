@@ -7,6 +7,7 @@ resource "aws_sqs_queue" "sqs_queue_fifo" {
 
   tags = {
     Project     = "${var.project}"
+    Product     = "${var.product}"
     Environment = "${var.env}"
   }
 }
