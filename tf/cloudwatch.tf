@@ -44,16 +44,16 @@ resource "aws_cloudwatch_metric_alarm" "error_log_filter_alarm" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "sqs_alarm" {
-  alarm_name          = "${var.project}-${var.product}-sqs_message_visible_alarm"
+  alarm_name          = "${var.project}-${var.product}-sqs_message_inflight_alarm"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "ApproximateNumberOfMessagesVisible"
+  metric_name         = "ApproximateNumberOfMessagesNotVisible"
   namespace           = "AWS/SQS"
   period              = "300"
-  statistic           = "Sum"
+  statistic           = "Average"
   treat_missing_data  = "notBreaching"
   threshold           = "1"
-  alarm_description   = "Alarm when SQS messages visible exceeds 2 for 1 minute"
+  alarm_description   = "Alarm when SQS messages visible exceeds 1 for 5 minute"
   alarm_actions       = [aws_sns_topic.notification_topic.arn]
 
   tags = {

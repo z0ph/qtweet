@@ -94,7 +94,7 @@ tf-destroy:
 ################ Cleaning ######################
 
 clean-venv: clean
-	rm -rf ./python/venv
+	@rm -rf ./python/venv
 
 clean:
 	@rm -fr build/
